@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your Destiny</title>
+<style>
+:root{
+  --bg:#1b1424;--fg:#f1e6d0;--muted:#a897b8;--accent:#e0a93b;--accent-fg:#1b1424;--line:#3a2d4d;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1424;--fg:#f1e6d0;--muted:#a897b8;--accent:#e0a93b;--accent-fg:#1b1424;--line:#3a2d4d}}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3ead8;--fg:#2a1d3a;--muted:#6d5a80;--accent:#7a2e8e;--accent-fg:#fff;--line:#d9c9a8}}
+:root[data-theme="dark"]{--bg:#1b1424;--fg:#f1e6d0;--muted:#a897b8;--accent:#e0a93b;--accent-fg:#1b1424;--line:#3a2d4d}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:Georgia,"Times New Roman",serif;display:flex;align-items:center;justify-content:center;text-align:center}
+main{padding:24px;max-width:560px;width:100%}
+h1{font-size:clamp(2rem,8vw,3.2rem);margin:0 0 .4em;font-weight:700;letter-spacing:.01em}
+p{color:var(--muted);font-size:1.1rem;margin:0 0 2em;line-height:1.5}
+button{font:inherit;font-size:1.25rem;font-weight:700;background:var(--accent);color:var(--accent-fg);border:0;border-radius:999px;padding:.9em 2.2em;cursor:pointer}
+button:hover{filter:brightness(1.08)}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+.result{display:none}
+.result.show{display:block}
+.label{color:var(--muted);font-size:1rem;margin:0}
+.big{font-size:clamp(2.6rem,12vw,4.6rem);font-weight:700;margin:.1em 0 .3em;line-height:1.05;color:var(--accent)}
+.big.pop{animation:pop .5s ease-out}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.big.pop{animation:none}}
+.note{margin-top:2.5em;font-size:.95rem}
+.reset{background:none;border:0;color:var(--muted);font-size:.9rem;font-weight:400;text-decoration:underline;padding:.5em;margin-top:.5em}
+</style>
+</head>
+<body>
+<main>
+  <section id="start">
+    <h1>Your path is waiting</h1>
+    <p>One press decides your race and class. Whatever you get is yours for good.</p>
+    <button id="go" type="button">Begin your journey</button>
+  </section>
+  <section id="result" class="result" aria-live="polite">
+    <p class="label" id="faction"></p>
+    <div class="big pop" id="race"></div>
+    <div class="big pop" id="cls"></div>
+    <p class="label">Your role</p>
+    <div class="big pop" id="role" style="font-size:clamp(1.8rem,8vw,2.8rem)"></div>
+    <p class="note">This is your path. It stays the same every time you return.</p>
+    <button class="reset" id="reset" type="button">Choose again</button>
+  </section>
+</main>
+<script>
+var T="Tank",H="Healer",D="DPS";
+var RACES=[
+{f:"Alliance",n:"Dwarf",c:{Hunter:[D],Paladin:[T,H,D],Priest:[H,D],Rogue:[D],Shaman:[H,D],Warrior:[T,D]}},
+{f:"Alliance",n:"Gnome",c:{Mage:[D],Priest:[H,D],Rogue:[D],Warlock:[D],Warrior:[T,D]}},
+{f:"Alliance",n:"Human",c:{Hunter:[D],Mage:[D],Paladin:[T,H,D],Priest:[H,D],Rogue:[D],Warlock:[D],Warrior:[T,D]}},
+{f:"Alliance",n:"Night Elf",c:{Druid:[T,H,D],Hunter:[D],Priest:[H,D],Rogue:[D],Warrior:[T,D]}},
+{f:"Alliance",n:"Skyborne \u2013 High Order",c:{Druid:[T,H,D],Hunter:[D],Mage:[D],Rogue:[D],Warrior:[T,D]}},
+{f:"Horde",n:"Orc",c:{Hunter:[D],Mage:[D],Rogue:[D],Shaman:[H,D],Warlock:[D],Warrior:[T,D]}},
+{f:"Horde",n:"Tauren",c:{Druid:[T,H,D],Hunter:[D],Shaman:[H,D],Warrior:[T,D]}},
+{f:"Horde",n:"Troll",c:{Hunter:[D],Mage:[D],Priest:[H,D],Rogue:[D],Shaman:[H,D],Warlock:[D],Warrior:[T,D]}},
+{f:"Horde",n:"Undead",c:{Mage:[D],Paladin:[T,H,D],Priest:[H,D],Rogue:[D],Warlock:[D],Warrior:[T,D]}},
+{f:"Horde",n:"Skyborne \u2013 Windshaper",c:{Druid:[T,H,D],Hunter:[D],Rogue:[D],Shaman:[H,D],Warrior:[T,D]}}
+];
+function roll(){
+  var r=pick(RACES),cl=pick(Object.keys(r.c)),ro=pick(r.c[cl]);
+  return {faction:r.f,race:r.n,cls:cl,role:ro};
+}
+var KEY="destiny-wow-v1";
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function load(){try{var v=localStorage.getItem(KEY);return v?JSON.parse(v):null}catch(e){return null}}
+function save(d){try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function clear(){try{localStorage.removeItem(KEY)}catch(e){}}
+function show(d){
+  document.getElementById("faction").textContent="For the "+d.faction;
+  document.getElementById("role").textContent=d.role;
+  document.getElementById("race").textContent=d.race;
+  document.getElementById("cls").textContent=d.cls;
+  document.getElementById("start").style.display="none";
+  document.getElementById("result").classList.add("show");
+}
+document.getElementById("go").addEventListener("click",function(){
+  var d=load()||roll();
+  save(d);show(d);
+});
+document.getElementById("reset").addEventListener("click",function(){
+  if(confirm("Give up your path and choose a new one?")){
+    clear();
+    document.getElementById("result").classList.remove("show");
+    document.getElementById("start").style.display="";
+  }
+});
+var saved=load();if(saved)show(saved);
+</script>
+</body>
+</html>
